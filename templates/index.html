@@ -1,4 +1,4 @@
-9<!DOCTYPE html>
+<!DOCTYPE html>
 <html>
 <head>
     <title>Elasticsearch Search</title>
@@ -10,11 +10,12 @@
             margin: 0;
             padding: 0;
             font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
         }
         form {
-            position: fixed;
-            top: 0;
-            left: 0;
             width: 100%;
             display: flex;
             justify-content: center;
@@ -37,24 +38,7 @@
             color: #282c34;
             cursor: pointer;
         }
-        .result {
-            border: 1px solid #abb2bf;
-            padding: 1rem;
-            margin: 1rem auto;
-            border-radius: 0.25rem;
-            width: 80%;
-        }
-        .result h2, .result p {
-            margin: 0;
-        }
-        .result h2 a {
-            color: #61afef;
-            text-decoration: none;
-        }
     </style>
-
-<head>
-    <title>Search App</title>
 </head>
 <body>
     <h1>Search App</h1>
@@ -70,9 +54,11 @@
             <h2>Search Results</h2>
             <ul>
             {% for result in search_results %}
-                <li>{{ result._source.url }}</li>
+                <li>{{ result }}</li>
             {% endfor %}
             </ul>
+        {% else %}
+            <p>No results found.</p>
         {% endif %}
     {% endif %}
 </body>
