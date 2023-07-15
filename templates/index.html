@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Elasticsearch Search</title>
+    <title>nightmare Search</title>
 </head>
 <style>
     body {
@@ -39,52 +39,44 @@
         color: #282c34;
         cursor: pointer;
     }
-    .result-item {
-        margin-bottom: 10px;
-        list-style: none;  /* This line removes the bullet points */
-    }
-    .result-title {
-        font-weight: bold;
-        color: #b39eb5;  /* Change this line to pastel purple */
-        text-decoration: none;
-    }
-    .result-summary {
-        margin-top: 5px;
-        color: #abb2bf;
-    }
-    .result-url {
-        font-weight: bold;
-        color: #b39eb5;  /* Change this line to pastel purple */
-        text-decoration: none;
+        .result {
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            background-color: #BB86FC; /* Dark Pastel Purple */
+            color: #FFFFFF; /* White text */
+            font-size: 16px;
+        }
+        .result:hover {
+            background-color: #D8A8FF; /* Light Pastel Purple */
+        }
+    input[type="text"] {
+        width: 400px; /* Adjust the width as needed */
+        padding: 10px;
+        font-size: 16px;
     }
 </style>
-
 <body>
     <h1>Search App</h1>
-    <form method="POST" action="/">
-        <input type="text" name="query" placeholder="Enter your query">
+    <form method="post">
+        <input type="text" name="query" value="{{ query }}" placeholder="Enter your search query">
         <button type="submit">Search</button>
     </form>
+    <p>Total results: {{ total_results }} (Search time: {{ search_time }} seconds)</p>
 
-{% if total_results %}
-    <p>Total results: {{ total_results }}</p>
-
-    {% if search_results %}
     <h2>Search Results</h2>
-    <ul>
     {% for result in search_results %}
-        <li class="result-item">
-            <h3 class="result-title">{{ result.title }}</h3>  <!-- Display the title here -->
-            <a href="{{ result.url }}" target="_blank" class="result-url">{{ result.url }}</a>
-        </li>
+        <div class="result" onclick="toggleResult(this)">
+            <a href="{{ result.url }}" target="_blank">{{ result.url }}</a>
+        </div>
     {% endfor %}
-    </ul>
-    {% else %}
-    <p>No results found.</p>
-    {% endif %}
-{% endif %}
 
-
+    <script>
+        function toggleResult(element) {
+            element.classList.toggle('clicked');
+        }
+    </script>
 </body>
 </html>
 

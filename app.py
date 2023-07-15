@@ -1,6 +1,8 @@
 from elasticsearch import Elasticsearch, ElasticsearchException
 from urllib.parse import urlparse
 from flask import Flask, render_template, request
+import time
+from datetime import datetime
 
 app = Flask(__name__)
 
@@ -16,11 +18,17 @@ def perform_search(query):
                 ]
             }
         },
-        "size": 100  # Adjust the size parameter as needed
+        "size": 1000,  # Adjust the size parameter as needed
+        "track_total_hits": True
     }
 
     try:
-        response = es.search(index='web_indexer', body=search_body, track_total_hits=True)
+        start_time = datetime.now()
+        response = es.search(index='web_indexer', body=search_body)
+        end_time = datetime.now()
+        search_time = (end_time - start_time).total_seconds()
+
+        total_hits = response['hits']['total']['value']
 
         search_results = []
         unique_domains = set()
@@ -35,25 +43,21 @@ def perform_search(query):
                 }
                 search_results.append(result)
 
-        total_hits = response['hits']['total']['value']  # Extract the total hits
-        time_taken = response['took']  # Extract the time taken
-
-        return search_results, total_hits, time_taken  # Return time taken along with search results and total hits
+        return search_results, total_hits, search_time
     except ElasticsearchException as e:
         raise e
-
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
     if request.method == 'POST':
         query = request.form['query']
         try:
-            search_results, total_hits = perform_search(query)  # Receive total_hits here
-            return render_template('index.html', search_results=search_results, total_results=total_hits)  # Pass total_hits to template
+            search_results, total_hits, search_time = perform_search(query)  # Receive total_hits and search_time
+            return render_template('index.html', search_results=search_results, total_results=total_hits, query=query, search_time=search_time)  # Pass query and search_time to template
         except ElasticsearchException as e:
             return f"Error occurred: {str(e)}"
 
-    return render_template('index.html')
+    return render_template('index.html', query='')  # Pass an empty query to the template
 
 
 if __name__ == '__main__':
