@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Search Results</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <h1>Search Results</h1>
+        {% if results.hits.total.value > 0 %}
+        <p>Found {{ results.hits.total.value }} result(s)</p>
+        <ul>
+            {% for hit in results.hits.hits %}
+            <li>
+                <h2>{{ hit._source.title }}</h2>
+                <p>{{ hit._source.content[:200] }}...</p>
+            </li>
+            {% endfor %}
+        </ul>
+        {% else %}
+        <p>No results found</p>
+        {% endif %}
+    </div>
+</body>
+</html>
+
