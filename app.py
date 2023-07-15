@@ -1,50 +1,56 @@
+from elasticsearch import Elasticsearch, ElasticsearchException
+from urllib.parse import urlparse
 from flask import Flask, render_template, request
-from elasticsearch import Elasticsearch
 
 app = Flask(__name__)
 
-def search_documents(query, limit=20):
-    es = Elasticsearch([{"host": "localhost", "port": 9200, "scheme": "http"}])
+# Elasticsearch connection
+es = Elasticsearch('http://localhost:9200')
 
-    if not es.indices.exists(index="web_indexer"):
-        es.indices.create(index="documents")
-
-    response = es.search(index="web_indexer", body={
+def perform_search(query):
+    search_body = {
         "query": {
-            "match_phrase": {  # Use match_phrase for phrase search
-                "content": query
+            "bool": {
+                "must": [
+                    {"match": {"content": query}}
+                ]
             }
         },
-        "size": limit
-    })
+        "size": 100  # Adjust the size parameter as needed
+    }
 
-    # Filter out duplicates
-    results = response['hits']['hits']
-    seen_urls = set()
-    unique_results = []
-    for result in results:
-        url = result['_source']['url']
-        if url not in seen_urls:
-            seen_urls.add(url)
-            unique_results.append(result)
+    try:
+        response = es.search(index='web_indexer', body=search_body, track_total_hits=True)
 
-    return unique_results
+        search_results = []
+        unique_domains = set()
 
+        for hit in response['hits']['hits']:
+            domain = urlparse(hit['_source'].get('url', '')).netloc
+            if domain not in unique_domains:
+                unique_domains.add(domain)
+                result = {
+                    'title': hit['_source'].get('title', ''),
+                    'url': hit['_source'].get('url', '')
+                }
+                search_results.append(result)
+
+        return search_results
+    except ElasticsearchException as e:
+        raise e
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
-    search_results = []
-    total_results = 0  # Variable to store the total number of results
-
     if request.method == 'POST':
-        query = request.form.get('query')
-        search_results = search_documents(query)
-        total_results = len(search_results)  # Count the total number of results
+        query = request.form['query']
+        try:
+            search_results = perform_search(query)
+            return render_template('index.html', search_results=search_results)
+        except ElasticsearchException as e:
+            return f"Error occurred: {str(e)}"
 
-    return render_template('index.html', search_results=search_results, total_results=total_results)
+    return render_template('index.html')
 
-
-
-if __name__ == "__main__":
-    app.run(host='0.0.0.0', debug=True)
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=5000, debug=True)
 

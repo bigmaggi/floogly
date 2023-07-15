@@ -3,6 +3,21 @@
 <head>
     <title>Elasticsearch Search</title>
     <style>
+        /* Existing styles */
+    
+        .result-url {
+            font-weight: bold;
+            color: #61afef;
+            text-decoration: none;
+        }
+    
+        .result-summary {
+            font-size: 12px;
+            color: #abb2bf;
+        }
+    </style>
+
+    <style>
         body {
             background-color: #282c34;
             color: #abb2bf;
@@ -38,6 +53,18 @@
             color: #282c34;
             cursor: pointer;
         }
+        .result-item {
+            margin-bottom: 10px;
+        }
+        .result-title {
+            font-weight: bold;
+            color: #61afef;
+            text-decoration: none;
+        }
+        .result-summary {
+            margin-top: 5px;
+            color: #abb2bf;
+        }
     </style>
 </head>
 <body>
@@ -47,20 +74,26 @@
         <button type="submit">Search</button>
     </form>
 
-    {% if total_results %}
-        <p>Total results: {{ total_results }}</p>
+{% if total_results %}
+    <p>Total results: {{ total_results }}</p>
 
-        {% if search_results %}
-            <h2>Search Results</h2>
-            <ul>
-            {% for result in search_results %}
-                <li>{{ result }}</li>
-            {% endfor %}
-            </ul>
-        {% else %}
-            <p>No results found.</p>
-        {% endif %}
-    {% endif %}
+    {% if search_results %}
+    <h2>Search Results</h2>
+    <ul>
+    {% for result in search_results %}
+        <li class="result-item">
+            <a href="{{ result.url }}" target="_blank" class="result-url">{{ result.url }}</a>
+            <p class="result-summary">{{ result.summary }}</p>
+        </li>
+    {% endfor %}
+    </ul>
+{% else %}
+    <p>No results found.</p>
+{% endif %}
+ 
+{% endif %}
+
+
 </body>
 </html>
 
