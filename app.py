@@ -36,10 +36,12 @@ def perform_search(query):
                 search_results.append(result)
 
         total_hits = response['hits']['total']['value']  # Extract the total hits
+        time_taken = response['took']  # Extract the time taken
 
-        return search_results, total_hits  # Return total hits along with search results
+        return search_results, total_hits, time_taken  # Return time taken along with search results and total hits
     except ElasticsearchException as e:
         raise e
+
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
