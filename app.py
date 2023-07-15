@@ -35,7 +35,9 @@ def perform_search(query):
                 }
                 search_results.append(result)
 
-        return search_results
+        total_hits = response['hits']['total']['value']  # Extract the total hits
+
+        return search_results, total_hits  # Return total hits along with search results
     except ElasticsearchException as e:
         raise e
 
@@ -44,12 +46,13 @@ def index():
     if request.method == 'POST':
         query = request.form['query']
         try:
-            search_results = perform_search(query)
-            return render_template('index.html', search_results=search_results)
+            search_results, total_hits = perform_search(query)  # Receive total_hits here
+            return render_template('index.html', search_results=search_results, total_results=total_hits)  # Pass total_hits to template
         except ElasticsearchException as e:
             return f"Error occurred: {str(e)}"
 
     return render_template('index.html')
+
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
