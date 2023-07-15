@@ -30,6 +30,7 @@ def search_documents(query, limit=20):
 
     return unique_results
 
+
 @app.route('/', methods=['GET', 'POST'])
 def index():
     search_results = []
@@ -41,6 +42,7 @@ def index():
         total_results = len(search_results)  # Count the total number of results
 
     return render_template('index.html', search_results=search_results, total_results=total_results)
+
 
 
 if __name__ == "__main__":
