@@ -1,76 +1,42 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>nightmare Search</title>
+    <title>nightmare search</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
 </head>
-<style>
-    body {
-        background-color: #282c34;
-        color: #abb2bf;
-        padding-top: 60px; /* Adjust as needed */
-        margin: 0;
-        padding: 0;
-        font-family: Arial, sans-serif;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        flex-direction: column;
-    }
-    form {
-        width: 100%;
-        display: flex;
-        justify-content: center;
-        background-color: #282c34;
-        padding: 10px 0;
-        margin-bottom: 2rem;
-        z-index: 1000;
-    }
-    input[type="text"] {
-        padding: 0.5rem;
-        margin-right: 0.5rem;
-        border: none;
-        border-radius: 0.25rem;
-    }
-    input[type="submit"] {
-        padding: 0.5rem 1rem;
-        border: none;
-        border-radius: 0.25rem;
-        background-color: #61afef;
-        color: #282c34;
-        cursor: pointer;
-    }
-        .result {
-            padding: 10px;
-            margin-bottom: 10px;
-            border-radius: 5px;
-            cursor: pointer;
-            background-color: #BB86FC; /* Dark Pastel Purple */
-            color: #FFFFFF; /* White text */
-            font-size: 16px;
-        }
-        .result:hover {
-            background-color: #D8A8FF; /* Light Pastel Purple */
-        }
-    input[type="text"] {
-        width: 400px; /* Adjust the width as needed */
-        padding: 10px;
-        font-size: 16px;
-    }
-</style>
 <body>
-    <h1>Search App</h1>
-    <form method="post">
-        <input type="text" name="query" value="{{ query }}" placeholder="Enter your search query">
-        <button type="submit">Search</button>
-    </form>
-    <p>Total results: {{ total_results }} (Search time: {{ search_time }} seconds)</p>
+    <div class="container">
+        <h1>search.py</h1>
+        <form method="post">
+            <input type="text" name="query" value="{{ query }}" placeholder="Enter your search query">
+            <input type="submit" value="Search">
+        </form>
+        
+        <!-- ChatGPT3.5 Turbo Response -->
+        {% if chat_response %}
+            <p class="chat-time">ChatGPT Response Time: {{ chat_time }} seconds</p>
+            <div class="chat-response">
+                <strong>ChatGPT3.5 Turbo Response:</strong>
+                <p>{{ chat_response }}</p>
+            </div>
+        {% endif %}
+        
+        <p>Total results: {{ total_results }} (Search time: {{ search_time }} seconds)</p>
 
-    <h2>Search Results</h2>
-    {% for result in search_results %}
-        <div class="result" onclick="toggleResult(this)">
-            <a href="{{ result.url }}" target="_blank">{{ result.url }}</a>
+        <h2>Search Results</h2>
+        <div class="result-container">
+            {% if search_results %}
+                {% for result in search_results %}
+                    <div class="result">
+                        <a href="{{ result.url }}" target="_blank">{{ result.title or result.url }}</a>
+                    </div>
+                {% endfor %}
+            {% else %}
+                <p>No results found.</p>
+            {% endif %}
         </div>
-    {% endfor %}
+    </div>
 
     <script>
         function toggleResult(element) {
