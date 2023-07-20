@@ -3,6 +3,8 @@ from flask import Flask, render_template, request
 from datetime import datetime
 import openai
 from flask_talisman import Talisman
+import redis
+import json
 
 app = Flask(__name__)
 Talisman(app)
@@ -12,7 +14,22 @@ es = Elasticsearch('http://202.61.236.229:9200')
 # OpenAI API configuration
 openai.api_key = 'your api key here'
 
+
 def perform_search(query, search_body):
+    no_cache = "no_cache" in query
+
+    # Remove "no_cache" from the query before it's sent to Elasticsearch
+    if no_cache:
+        query = query.replace("no_cache", "").strip()
+
+    cache_key = f'search:{query}'
+
+    # If not using no_cache, try getting the data from the cache
+    if not no_cache:
+        cached_data = redis.get(cache_key)
+        if cached_data is not None:
+            return json.loads(cached_data)
+
     prompt = f"chatgpt3.5: {query}"
 
     start_time_gpt = datetime.now()
@@ -31,6 +48,9 @@ def perform_search(query, search_body):
     gpt_response_time = (end_time_gpt - start_time_gpt).total_seconds()
     chat_response = response.choices[0].text.strip()
 
+    # Update the search_body with the new query
+    search_body["query"]["bool"]["must"][0]["match_phrase"]["content"] = query
+
     start_time = datetime.now()
     response = es.search(
         index='web_indexer',
@@ -41,15 +61,33 @@ def perform_search(query, search_body):
 
     total_hits = response['hits']['total']['value']
 
+    # Set to store URLs and prevent duplicates
+    urls = set()
+
     search_results = []
     for hit in response['hits']['hits']:
+        url = hit['_source'].get('url', '')
+        # Skip this result if we've already seen this URL
+        if url in urls:
+            continue
+        urls.add(url)
+
         result = {
-            'title': hit['_source'].get('title', hit['_source'].get('url', '')),
-            'url': hit['_source'].get('url', '')
+            'title': hit['_source'].get('title', url),
+            'url': url,
+            'language': hit['_source'].get('language', 'unknown')
         }
         search_results.append(result)
 
-    return chat_response, search_results, total_hits, search_time, gpt_response_time
+    # Sort results to prioritize English language results
+    search_results.sort(key=lambda r: r['language'] != 'en')
+
+    # Store the result in the cache for 7 days (604800 seconds)
+    result = (chat_response, search_results, total_hits, search_time, gpt_response_time)
+    if not no_cache:
+        redis.set(cache_key, json.dumps(result), ex=604800)
+
+    return result
 
 
 @app.route('/', methods=['GET', 'POST'])
